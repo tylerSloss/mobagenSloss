@@ -2,15 +2,17 @@
 #include "Point2D.h"
 #include "generators/ParticleGenerator.h"
 #include "generators/RandomGenerator.h"
-#include "generators/WaterErrosionGenerator.h"
+#include "generators/WaterParticleErrosionGenerator.h"
+//#include "generators/WaterErrosionGenerator.h"
+
 
 #include <chrono>
 
 Manager::Manager(Engine* engine, int size)
     : GameObject(engine) {
   // todo: add your generator
+  generators.push_back(new WaterParticleErrosionGenerator());
   generators.push_back(new ParticleGenerator());
-  generators.push_back(new WaterErrosionGenerator());
   generators.push_back(new RandomScenarioGenerator());
 }
 
