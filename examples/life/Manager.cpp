@@ -1,10 +1,12 @@
 #include "Manager.h"
 #include "ColorT.h"
 #include "rules/JohnConway.h"
+#include "rules/SlossCustomRule.h"
 #include <iostream>
 
 Manager::Manager(Engine* pEngine) : GameObject(pEngine) {
   world.Resize(sideSize);
+  rules.push_back(new SlossCustomRule());
   rules.push_back(new JohnConway());
 }
 
