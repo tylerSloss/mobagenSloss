@@ -13,6 +13,7 @@ class SlossCustomRule : public RuleBase{
   std::string GetName() override{return "SlossCustomRule";}
   void Step(World& world) override;
   int CountNeighbors(World& world, Point2D point);
+  GameOfLifeTileSetEnum GetTileSet() override{return GameOfLifeTileSetEnum::Square;};
 };
 
 #endif

@@ -17,7 +17,7 @@ file(GLOB LIFE_SRC
 
 install (FILES ${LIFE_INC} DESTINATION include/life)
 
-add_executable(life ${LIFE_SRC} ${LIFE_INC} GameOfLifeTileSetEnum.h rules/SlossCustomRule.cpp rules/SlossCustomRule.h)
+add_executable(life ${LIFE_SRC} ${LIFE_INC} GameOfLifeTileSetEnum.h rules/SlossCustomRule.cpp rules/SlossCustomRule.h rules/RandomChangingRule.cpp rules/RandomChangingRule.h rules/HighLifeRuleset.cpp rules/HighLifeRuleset.h rules/TLifeRuleset.cpp rules/TLifeRuleset.h)
 
 target_include_directories(life PUBLIC ${SDL2_INCLUDE_DIR} ${CORE_INC_DIR})
 target_link_libraries (life PUBLIC SDL2-static IMGUI core)
