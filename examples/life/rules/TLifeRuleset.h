@@ -15,6 +15,11 @@ class TLifeRuleset : public RuleBase {
   int CountNeighbors(World& world, Point2D point);
   int CountOrthagnalNeighbors(World& world, Point2D point);
   GameOfLifeTileSetEnum GetTileSet() override{return GameOfLifeTileSetEnum::Square;};
+  int CountHorisontalNeighbors(World& world, Point2D point);
+  int CountVerticalNeighbors(World& world, Point2D point);
+  int CountDiagnolNeighbors(World& world, Point2D point);
+  int CountLRDiagnolNeighbors(World& world, Point2D point);
+  int CountRLDiagnolNeighbors(World& world, Point2D point);
 };
 
 #endif  // MOBAGEN_TLIFERULESET_H
