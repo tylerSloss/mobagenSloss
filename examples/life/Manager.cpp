@@ -34,7 +34,8 @@ void Manager::OnGui(ImGuiContext *context){
               ImGui::GetIO().Framerate);
 
   static auto newSize = sideSize;
-  if(ImGui::SliderInt("Side Size", &newSize, 16, 256)) {
+  if(ImGui::SliderInt("Side Size", &newSize, 5, 256)) {
+    newSize = (newSize/4)*4 + 1;
     if(newSize!=sideSize) {
       sideSize = newSize;
       world.Resize(newSize);
@@ -91,7 +92,23 @@ void Manager::OnGui(ImGuiContext *context){
   static Point2D lastIndexClicked = {INT32_MAX, INT32_MAX};
   if(ImGui::IsMouseDown(ImGuiMouseButton_Left)){
     auto mousePos = ImGui::GetMousePos();
-    auto index = mousePositionToIndex(mousePos);
+    Point2D index;
+    if(rules[ruleId]->GetTileSet()==GameOfLifeTileSetEnum::Square)
+      index = mousePositionToIndex(mousePos);
+    else if(rules[ruleId]->GetTileSet()==GameOfLifeTileSetEnum::Hexagon) {
+      auto windowSize = engine->window->size();
+      auto center = Point2D(windowSize.x / 2, windowSize.y / 2);
+      float minDimension = std::min(windowSize.x, windowSize.y) * 0.99f;
+      auto squareSide = minDimension / sideSize;
+      auto sideSideOver2 = sideSize / 2.0f;
+      index = mousePositionToIndex(mousePos);
+      float displacement = abs(index.y-(int)sideSideOver2)%2 == 1 ? squareSide/2 : 0;
+      mousePos.x-=displacement;
+      index = mousePositionToIndex(mousePos);
+    }
+
+    std::cout << index.to_string() << std::endl;
+
     if(lastIndexClicked!=index) {
       lastIndexClicked = index;
       std::cout << "MatrixPos: " << index.to_string() << std::endl;
@@ -180,24 +197,6 @@ void Manager::OnDraw(SDL_Renderer* renderer){
             static_cast<int>(squareSide),
             static_cast<int>(squareSide)};
         SDL_RenderFillRect(renderer, &rect);
-      }
-    }
-
-    // Draw line matrix
-    auto lineColor = Color32(50, 50, 50, 50);
-    SDL_SetRenderDrawColor(renderer, lineColor.r, lineColor.g, lineColor.b, 10);
-    for (int i = 0; i <= sideSize; i++) {
-      if (sideSize < 50 || i == 0 || i == sideSize) {
-        SDL_RenderDrawLine(renderer,
-                           (int) (center.x - minDimension / 2),
-                           (int) (center.y - (i - sideSideOver2) * squareSide),
-                           (int) (center.x + minDimension / 2),
-                           (int) (center.y - (i - sideSideOver2) * squareSide));
-        SDL_RenderDrawLine(renderer,
-                           (int) (center.x - (i - sideSideOver2) * squareSide),
-                           (int) (center.y - minDimension / 2),
-                           (int) (center.x - (i - sideSideOver2) * squareSide),
-                           (int) (center.y + minDimension / 2));
       }
     }
   }
