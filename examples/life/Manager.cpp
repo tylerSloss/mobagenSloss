@@ -2,10 +2,14 @@
 #include "ColorT.h"
 #include "rules/JohnConway.h"
 #include "rules/HexagonGameOfLife.h"
+#include "rules/TLifeRuleset.h"
+#include "rules/RandomChangingRule.h"
 #include <iostream>
 
 Manager::Manager(Engine* pEngine1, Engine* pEngine) : GameObject(pEngine) {
   world.Resize(sideSize);
+  rules.push_back(new TLifeRuleset());
+  rules.push_back(new RandomChangingRule());
   rules.push_back(new HexagonGameOfLife());
   rules.push_back(new JohnConway());
 }
