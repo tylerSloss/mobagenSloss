@@ -9,23 +9,27 @@
 #include <iostream>
 #include <map>
 #include <unordered_set>
+#include <stack>
 
-class Manager: GameObject  {
- private:
+class Manager : GameObject {
+private:
   WorldState state;
-  vector<WorldState> previousStates;
-  Point2D selected={INT32_MIN,INT32_MIN};
+  stack<WorldState> previousStates;
+  Point2D selected = {INT32_MIN, INT32_MIN};
   unordered_set<Point2D> validMoves;
   map<uint8_t, Texture*> piecePackedToTexture;
+  PieceColor aiColor = PieceColor::Black;
+  bool aiEnabled = false;
 
- public:
+public:
   explicit Manager(Engine* pEngine);
   void Start() override;
   ~Manager();
   void OnGui(ImGuiContext* context) override;
   void OnDraw(SDL_Renderer* renderer) override;
+  void Update(float deltaTime) override;
 
- private:
+private:
   Point2D mousePositionToIndex(ImVec2& pos);
   unordered_set<Point2D> getMoves(PieceType t, Point2D point);
   void drawSquare(SDL_Renderer* renderer, Color32& color, SDL_Rect& rect);
