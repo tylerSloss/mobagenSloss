@@ -37,7 +37,7 @@ Window::Window(std::string title) {
   SDL_Log("SDL CREATED");
 
   // Setup SDL_Renderer instance
-  sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+  sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);  //| SDL_RENDERER_PRESENTVSYNC);
   if (sdlRenderer == nullptr) {
     SDL_Log("Error creating SDL_Renderer!");
     throw std::runtime_error("Error creating SDL_Renderer!");
@@ -89,20 +89,14 @@ Window::~Window() {
 
 // todo: cache this per frame to avoid call SDL_GetWindowSize every single call
 // todo: this should be integer return
-Point2D Window::size() const {
-  int x, y;
-  SDL_GetWindowSize(this->sdlWindow, &x, &y);
-  return {x, y};
-}
+Point2D Window::size() { return windowSize; }
+
 void Window::Update() {
-  auto size = this->size();
-  float SCALE = 2.0f;
-  ImFontConfig cfg;
-  cfg.SizePixels = 13 * SCALE;
-
-  //    ImGui::GetIO().Fonts->AddFontDefault(&cfg)->FontSize = SCALE;
-  //    ImGui::GetIO().Fonts->Build();
-  // im
-
-  //    imGuiContext->FontSize = std::min(size.y, size.x)/10;
+  Point2D p;
+  SDL_GetWindowSize(this->sdlWindow, &p.x, &p.y);
+  if (windowSize != p) {
+    windowSize = p;
+    auto minDimension = windowSize.x > windowSize.y ? windowSize.y : windowSize.x;
+    imGuiContext->Font->Scale = minDimension / 500.f;
+  }
 }

@@ -5,20 +5,9 @@
 #  include <emscripten.h>
 #endif
 
-//#ifdef __EMSCRIPTEN__
-// static Engine *instance = nullptr;
-// void Engine::loop(void){
-//  instance->Tick();
-//}
-//#endif
+using namespace std::chrono_literals;
 
-Engine::Engine() {
-  //#ifdef __EMSCRIPTEN__
-  //    instance = nullptr;
-  //#endif
-  window = nullptr;
-  //    imGuiContext = nullptr;
-}
+Engine::Engine() { window = nullptr; }
 
 Engine::~Engine() {
   if (window) {
@@ -31,19 +20,37 @@ Engine::~Engine() {
 
   for (auto go : gameObjects) delete (go);  // clear all remaining game objects
   gameObjects.clear();
+  SDL_Log("Game Objects Cleared");
 }
-
+// https://gafferongames.com/post/fix_your_timestep/
 void Engine::Run() {
   // Main loop
-  //#ifndef __EMSCRIPTEN__
-  while (!done) {
-    Tick();
+  for (;;) {
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastFrameTime).count();
+    deltaTime = duration / 1000000.0f;
+    accumulatedTime += duration;
+    lastFrameTime = currentTime;
+
+    int64_t targetTimeToSleep = 1000000 / targetFPS;
+    for (; accumulatedTime >= targetTimeToSleep; accumulatedTime -= targetTimeToSleep) {
+      Tick();
+      if (done) return;
+    }
+    if (targetTimeToSleep >= accumulatedTime)
+      targetTimeToSleep -= accumulatedTime;
+    else
+      targetTimeToSleep = 0;
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(targetTimeToSleep / 1000);
+#else
+    // std::this_thread::sleep_for(targetTimeToSleep * 1ms/1000);
+    SDL_Delay(targetTimeToSleep / 1000);
+#endif
   }
-  Exit();
-  //#endif
 }
 
-int Engine::Start(std::string title) {
+bool Engine::Start(std::string title) {
   SDL_Log("Initializing Window");
   window = new Window(title);
   if (window != nullptr)
@@ -51,26 +58,22 @@ int Engine::Start(std::string title) {
   else
     exit(0);
 
-  //    imGuiContext = ImGui::GetCurrentContext(); // todo: make this work on all game objects
-
   // start all gameobjects
   for (auto go : gameObjects) go->Start();
-  //#ifdef __EMSCRIPTEN__
-  //    SDL_Log("Setting main loop for emscripten");
-  //    instance = this;
-  //    emscripten_set_main_loop(Engine::loop, 0, 1); // should be called only after sldrenderinit
-  //    SDL_Log("Main loop set");
-  //#endif
+
+  lastFrameTime = std::chrono::high_resolution_clock::now();
+  SDL_Delay(1000 / targetFPS);
+  deltaTime = 0;
+
   return true;
 }
 
 void Engine::Tick() {
-  window->Update();
-
   // Start the Dear ImGui frame
   ImGui_ImplSDLRenderer_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ImGui::NewFrame();
+  window->Update();
 
   SDL_SetRenderDrawColor(window->sdlRenderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255),
                          (Uint8)(clear_color.w * 255));
@@ -80,7 +83,6 @@ void Engine::Tick() {
   processInput();
 
   // update
-  auto deltaTime = ImGui::GetIO().DeltaTime;
   for (auto go : gameObjects) go->Update(deltaTime);
 
   // iterate over all game objects ui
@@ -104,17 +106,11 @@ void Engine::Tick() {
 
   ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
   SDL_RenderPresent(window->sdlRenderer);
-#ifdef __EMSCRIPTEN__
-  emscripten_sleep(0);
-#else
-  SDL_Delay(0);
-#endif
 }
 
 void Engine::Exit() {
   SDL_Log("Exit called");
   done = true;
-  SDL_Log("Game Objects Cleared");
 }
 
 void Engine::processInput() {

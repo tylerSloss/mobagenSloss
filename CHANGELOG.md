@@ -1,3 +1,100 @@
+# [1.5.0](https://github.com/InfiniBrains/mobagen/compare/v1.4.0...v1.5.0) (2023-03-20)
+
+
+### Bug Fixes
+
+* conversions via casting ([fe37e59](https://github.com/InfiniBrains/mobagen/commit/fe37e5941d64a0cb89ffaa06603ea798b64a948c))
+
+
+### Features
+
+* **chess:** naive heuristics ([9573935](https://github.com/InfiniBrains/mobagen/commit/9573935bf0ae6cd7df38d6ef2ce976610050de89))
+* show state score ([8ef874d](https://github.com/InfiniBrains/mobagen/commit/8ef874df3abc851dbaaf868ae8dbc9b9335a0c3b))
+* simplified heuristics ([fb42040](https://github.com/InfiniBrains/mobagen/commit/fb42040bb5bf1bb9dfb8d3f98cc7a28780b35b63))
+
+
+### Performance Improvements
+
+* improve bit packing ([3bdf750](https://github.com/InfiniBrains/mobagen/commit/3bdf75083a45ccf192b8c703f64487ecb3468a99))
+
+# [1.4.0](https://github.com/InfiniBrains/mobagen/compare/v1.3.7...v1.4.0) (2023-03-16)
+
+
+### Features
+
+* **chess:** add now king respects pawn attacked places ([b828177](https://github.com/InfiniBrains/mobagen/commit/b828177c1fe190f33c9e3e419de492a2602b2622))
+* **chess:** king now respects the enemy king ([731da64](https://github.com/InfiniBrains/mobagen/commit/731da642ff3d4bdfaa7619f84005f7d6bda2fced))
+
+## [1.3.7](https://github.com/InfiniBrains/mobagen/compare/v1.3.6...v1.3.7) (2023-03-15)
+
+
+### Bug Fixes
+
+* semantic-release ci wont be publishing files anymore ([e73a014](https://github.com/InfiniBrains/mobagen/commit/e73a0148df192570b880dda659222655dc98ed8f))
+
+## [1.3.6](https://github.com/InfiniBrains/mobagen/compare/v1.3.5...v1.3.6) (2023-03-15)
+
+
+### Bug Fixes
+
+* release version name to add v on front of the version ([1c234f1](https://github.com/InfiniBrains/mobagen/commit/1c234f1341b9a57c4c984f1fbc3cb2052ca0e490))
+
+## [1.3.5](https://github.com/InfiniBrains/mobagen/compare/v1.3.4...v1.3.5) (2023-03-15)
+
+
+### Bug Fixes
+
+* remove debug and comments on release workflow ([dbfb08d](https://github.com/InfiniBrains/mobagen/commit/dbfb08d00ab6cf480b2bd47c0c6c92a007ee76e9))
+
+## [1.3.4](https://github.com/InfiniBrains/mobagen/compare/v1.3.3...v1.3.4) (2023-03-15)
+
+
+### Bug Fixes
+
+* lint ([e9b5761](https://github.com/InfiniBrains/mobagen/commit/e9b57610dcbcb5b2929a8d3045a51c65f96a6400))
+
+## [1.3.3](https://github.com/InfiniBrains/mobagen/compare/v1.3.2...v1.3.3) (2023-03-15)
+
+
+### Performance Improvements
+
+* **core:** better time management to targeted fps ([5723085](https://github.com/InfiniBrains/mobagen/commit/5723085ff643d85dc9a2b775451081816adb06f2))
+
+## [1.3.2](https://github.com/InfiniBrains/mobagen/compare/v1.3.1...v1.3.2) (2023-03-14)
+
+
+### Bug Fixes
+
+* disable webrequest api ([6786964](https://github.com/InfiniBrains/mobagen/commit/6786964bae3361c14da1a17df541bb18f2be42c5))
+
+## [1.3.1](https://github.com/InfiniBrains/mobagen/compare/v1.3.0...v1.3.1) (2023-03-14)
+
+
+### Bug Fixes
+
+* downgrade curl version ([89070f7](https://github.com/InfiniBrains/mobagen/commit/89070f723d5da6780cb1fdcd1f77cf123ccb6e3d))
+
+# [1.3.0](https://github.com/InfiniBrains/mobagen/compare/v1.2.0...v1.3.0) (2023-03-14)
+
+
+### Features
+
+* **webrequest:** added curl, mbed and cpr libs as dependencies ([5582143](https://github.com/InfiniBrains/mobagen/commit/5582143a0db2cb6102b12ad11a29343abe8d4461))
+
+# [1.3.0](https://github.com/InfiniBrains/mobagen/compare/v1.2.0...v1.3.0) (2023-03-14)
+
+
+### Features
+
+* **webrequest:** added curl, mbed and cpr libs as dependencies ([5582143](https://github.com/InfiniBrains/mobagen/commit/5582143a0db2cb6102b12ad11a29343abe8d4461))
+
+# [1.2.0](https://github.com/InfiniBrains/mobagen/compare/v1.1.1...v1.2.0) (2023-03-09)
+
+
+### Features
+
+* **window:** make font proportional to screen size ([c195303](https://github.com/InfiniBrains/mobagen/commit/c19530335ca4fbb7ff9d6572f9c7c571b54ac394))
+
 ## [1.1.1](https://github.com/InfiniBrains/mobagen/compare/v1.1.0...v1.1.1) (2023-03-09)
 
 
