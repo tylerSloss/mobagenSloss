@@ -109,4 +109,16 @@ public:
   virtual vector<WorldState> GenerateStates(WorldState* world, const Point2D& origin) = 0;
 };
 
+struct MoveState {
+  WorldState state;
+  Move move;
+  int score;
+
+  bool operator<(const MoveState& other) const
+  { 
+      return score < other.score;
+  }
+
+};
+
 #endif  // CHESS_WORLDSTATE_H
