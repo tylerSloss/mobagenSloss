@@ -111,13 +111,28 @@ public:
 
 struct MoveState {
   WorldState state;
-  Move move;
+  vector<Move> moves;
   int score;
 
   bool operator<(const MoveState& other) const
   { 
       return score < other.score;
   }
+  bool operator>(const MoveState& other) const
+  { 
+      return score > other.score;
+  }
+
+  MoveState(WorldState state, vector<Move> prevMoves, int score)
+  { 
+    this->state = state;
+    this->moves = prevMoves;
+    this->score = score;
+  };
+  Move GetCurrentMove() { return moves.back(); }
+  Move GetFirstMove() { return moves.front(); }
+
+  void AddMoveToMoves(Move move) { moves.push_back(move); }
 
 };
 

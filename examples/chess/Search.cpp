@@ -63,7 +63,43 @@ Move Search::NextMove(WorldState& state) {
 
   for pruning maximize the score for your turn
   */
-    vector<MoveState> sorted; 
+
+    vector<MoveState> score = NextPossibleMovesSorted(state);
+    //vector<MoveState> scoreH1(score.begin(), score.begin() + score.size() / 2);
+    //vector<MoveState> scoreH2(score.begin() + score.size() / 2, score.end());
+    
+    vector<Move> scoreMoves;
+    vector<MoveState> score2;
+    for (auto moves : score)
+    {
+        
+        auto possibleState = state;
+        possibleState.Move(moves.moves.back().From(), moves.moves.back().To());
+        
+        score2.append_range(NextPossibleMovesSorted(possibleState, moves.moves));
+    }
+    /*vector<MoveState> score2H1(score2.begin(), score2.begin() + score2.size() / 2);
+    std::sort(score2H1.begin(), score2H1.end());*/
+    std::sort(score2.begin(), score2.end());
+
+
+    /*for (auto moves2 : score2H1)
+    {
+        
+    }*/
+
+
+
+    vector<MoveState> score3;
+    for (auto moves2 : score2) {
+        auto possibleState = state;
+        possibleState.Move(moves2.moves.back().From(), moves2.moves.back().To());
+        score3.append_range(NextPossibleMovesSorted(possibleState, moves2.moves));
+    }
+    std::sort(score3.begin(), score3.end());
+    //vector<MoveState> score3H1(score3.begin(), score3.begin() + score.size() / 2);
+
+    /*vector<MoveState> sorted; 
     vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
     for (auto move : possibleMoves)
     {
@@ -72,25 +108,117 @@ Move Search::NextMove(WorldState& state) {
         auto score = Heuristics::MaterialScore(&possibleState);
         sorted.push_back({possibleState, move, score});
     }
-    std::sort(sorted.begin(), sorted.end());
-    if (sorted.size() > 0)
+    std::sort(sorted.begin(), sorted.end());*/
+
+    /*vector<Move> l2moves;
+    for (auto moves : sorted)
     {
-        if (state.GetTurn() == PieceColor::Black) 
-        {
-            Move nextmove = sorted.front().move;
-            int movescore = sorted.front().score;
-            return nextmove;
-        } 
-        else if (state.GetTurn() == PieceColor::White) 
-        {
-            Move nextmove = sorted.back().move;
-            int movescore = sorted.back().score;
-            return nextmove;
-        }
+
+    }*/
+
+
+
+
+
+    
+    if (score3.size() > 0)
+    {
+        if (state.GetTurn() == PieceColor::Black)
+            return score3.front().moves.front();
+        else
+            return score3.back().moves.front();
     }
+
+
     return Move();
 
 }
+
+vector<MoveState> Search::NextPossibleMovesSorted(WorldState& state) { 
+   
+    vector<Move> bestPossibleMoves;
+
+    vector<MoveState> sorted;
+    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+    for (auto move : possibleMoves) {
+        auto possibleState = state;
+        possibleState.Move(move.From(), move.To());
+        auto score = Heuristics::BoardAnalysis(&possibleState);
+        sorted.push_back({possibleState, {move}, (int)score.Score()});
+    }
+    std::sort(sorted.begin(), sorted.end());
+    vector<MoveState> reverseSorted = sorted;
+    std::sort(reverseSorted.rbegin(), reverseSorted.rend());
+    
+    if (sorted.size() > 0) {
+        if (state.GetTurn() == PieceColor::Black) {
+            Move nextmove = sorted.front().GetFirstMove();
+            int movescore = sorted.front().score;
+            /*for (auto bestmove : sorted)
+            {
+                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+            }
+            return bestPossibleMoves;*/
+            return sorted;
+        } else if (state.GetTurn() == PieceColor::White) {
+            Move nextmove = sorted.front().GetCurrentMove();
+            int movescore = sorted.back().score;
+            /*for (auto bestmove : reverseSorted) 
+            {
+                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+            }
+            return bestPossibleMoves;*/
+            return reverseSorted;
+        }
+    }
+    
+    return vector<MoveState>(); 
+}
+
+vector<MoveState> Search::NextPossibleMovesSorted(WorldState& state, vector<Move> prevMoves) { 
+    vector<Move> bestPossibleMoves;
+
+    vector<MoveState> sorted;
+    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+    for (auto move : possibleMoves) {
+        auto possibleState = state;
+        possibleState.Move(move.From(), move.To());
+        auto score = Heuristics::MaterialScore(&possibleState);
+        MoveState moveState(possibleState,prevMoves, score);
+        moveState.AddMoveToMoves(move);
+        sorted.push_back(moveState);
+    }
+    std::sort(sorted.begin(), sorted.end());
+    vector<MoveState> reverseSorted = sorted;
+    std::sort(reverseSorted.rbegin(), reverseSorted.rend());
+
+    if (sorted.size() > 0) {
+        if (state.GetTurn() == PieceColor::Black) {
+            Move nextmove = sorted.front().GetFirstMove();
+            int movescore = sorted.front().score;
+            /*for (auto bestmove : sorted)
+            {
+                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+            }
+            return bestPossibleMoves;*/
+            return sorted;
+        } else if (state.GetTurn() == PieceColor::White) {
+            Move nextmove = sorted.front().GetCurrentMove();
+            int movescore = sorted.back().score;
+            /*for (auto bestmove : reverseSorted)
+            {
+                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+            }
+            return bestPossibleMoves;*/
+            return reverseSorted;
+        }
+    }
+    
+
+    return vector<MoveState>();
+}
+
+
 
 auto Search::ListPlacesKingCannotGo(WorldState& state, PieceColor turn) -> unordered_set<Point2D> {
   unordered_set<Point2D> moves;
@@ -127,8 +255,8 @@ auto Search::ListPlacesKingCannotGo(WorldState& state, PieceColor turn) -> unord
     }
   }
 
-  cout << "attacked: ";
+  /*cout << "attacked: ";
   for (auto item : moves) cout << item.to_string();
-  std::cout << endl;
+  std::cout << endl;*/
   return moves;
 }

@@ -6,6 +6,8 @@
 struct Search {
   // todo: create your algorithm to calculate next move
   static Move NextMove(WorldState& state);
+  static vector<MoveState> NextPossibleMovesSorted(WorldState& state);
+  static vector<MoveState> NextPossibleMovesSorted(WorldState& state, vector<Move> prevMoves);
   /**
    * @param state world state
    * @param currentPlayer calculate the current turn possible moves

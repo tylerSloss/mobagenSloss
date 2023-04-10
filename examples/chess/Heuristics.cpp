@@ -14,7 +14,13 @@
 
 Heuristics Heuristics::BoardAnalysis(WorldState* state) {
   // todo: write your own heuristic here
-  return {};
+  Heuristics heuristicScore;
+  int score = 0;
+  score += MaterialScore(state);
+  score -= PiecesThreatened(state);
+  heuristicScore.score = score;
+  return heuristicScore;
+  //return {};
 }
 int Heuristics::MaterialScore(WorldState* state) {
   int score = 0;
@@ -29,6 +35,14 @@ int Heuristics::MaterialScore(WorldState* state) {
           pieceScore += 1000;                                        // piece value
           pieceScore += King::AttackMoves(*state, location).size();  // mobility
           pieceScore += distanceToCenter(location);
+          if (KingInCheck(state))
+          {
+            if (KingInCheckmate(state)) 
+                pieceScore += 750;
+            else
+                pieceScore += 500;
+          }
+              
           // todo: king safety, check, draw and mate
           break;
         case PieceType::Queen:
@@ -56,7 +70,7 @@ int Heuristics::MaterialScore(WorldState* state) {
           moves = Pawn::PossibleMoves(*state, location).size();  // mobility
           pieceScore += distanceToCenter(location);
           pieceScore += moves;
-          if (moves == 0) pieceScore -= 5;                          // blocked
+          if (moves == 0) pieceScore -= 1;                          // blocked
           pieceScore -= 2 * Pawn::CountDoubles(*state, location);   // doubled
           if (Pawn::IsIsolated(*state, location)) pieceScore -= 5;  // isolation
           break;
@@ -71,9 +85,283 @@ int Heuristics::MaterialScore(WorldState* state) {
   }
   return score;
 }
+
+int Heuristics::PiecesThreatened(WorldState* state) {
+  int score = 0;
+  for (auto line = 0; line < 8; line++) {
+    for (auto column = 0; column < 8; column++) {
+      auto location = Point2D(column, line);
+      auto piece = state->PieceAtPosition(location);
+      auto pieceScore = 0;
+      int moves;
+      switch (piece.Piece()) {
+        case PieceType::King:
+          if (KingInCheck(state)) pieceScore += 500;
+          break;
+        case PieceType::Queen:
+          if (piece.Color() == PieceColor::Black) {
+            if (PieceThreatened(state, piece, PieceColor::Black)) {
+                pieceScore += 90;
+                pieceScore += Queen::AttackMoves(*state, location).size();  // mobility
+                pieceScore += distanceToCenter(location);
+            }
+          }
+          if (piece.Color() == PieceColor::White) {
+            if (PieceThreatened(state, piece, PieceColor::White)) {
+                pieceScore += 90;
+                pieceScore += Queen::AttackMoves(*state, location).size();  // mobility
+                pieceScore += distanceToCenter(location);
+            }
+          }
+          break;
+        case PieceType::Rook:
+          if (piece.Color() == PieceColor::Black) {
+            if (PieceThreatened(state, piece, PieceColor::Black)) {
+                pieceScore += 50;
+                pieceScore += Rook::AttackMoves(*state, location).size();  // mobility
+                pieceScore += distanceToCenter(location);
+            }
+            if (piece.Color() == PieceColor::White) {
+                if (PieceThreatened(state, piece, PieceColor::White)) {
+                  pieceScore += 50;
+                  pieceScore += Rook::AttackMoves(*state, location).size();  // mobility
+                  pieceScore += distanceToCenter(location);
+                }
+            }
+            break;
+            case PieceType::Knight:
+                if (piece.Color() == PieceColor::Black) {
+                  if (PieceThreatened(state, piece, PieceColor::Black)){
+                      pieceScore += 50;
+                      pieceScore += Knight::AttackMoves(*state, location).size();  // mobility
+                      pieceScore += distanceToCenter(location);
+                    }
+                }
+                if (piece.Color() == PieceColor::White) {
+                  if (PieceThreatened(state, piece, PieceColor::White)) {
+                    pieceScore += 50;
+                    pieceScore += Knight::AttackMoves(*state, location).size();  // mobility
+                    pieceScore += distanceToCenter(location);
+                  }
+                }
+                break;
+            case PieceType::Bishop:
+                if (piece.Color() == PieceColor::Black) {
+                  if (PieceThreatened(state, piece, PieceColor::Black)) {
+                    pieceScore += 30;
+                    pieceScore += Bishop::AttackMoves(*state, location).size();  // mobility
+                    pieceScore += distanceToCenter(location);
+                  }
+                }
+                if (piece.Color() == PieceColor::White) {
+                  if (PieceThreatened(state, piece, PieceColor::White)) {
+                    pieceScore += 30;
+                    pieceScore += Bishop::AttackMoves(*state, location).size();  // mobility
+                    pieceScore += distanceToCenter(location);
+                  }
+                }
+                break;
+            case PieceType::Pawn:
+                if (piece.Color() == PieceColor::Black) {
+                  if (PieceThreatened(state, piece, PieceColor::Black)) {
+                    pieceScore += 10;
+                    pieceScore += Pawn::AttackMoves(*state, location).size();  // mobility
+                    pieceScore += distanceToCenter(location);
+                  }
+                }
+                else if (piece.Color() == PieceColor::White) {
+                  if (PieceThreatened(state, piece, PieceColor::White)) {
+                    pieceScore += 10;
+                    pieceScore += Pawn::AttackMoves(*state, location).size();  // mobility
+                    pieceScore += distanceToCenter(location);
+                  }
+                }
+                break;
+            default:
+                continue;
+          }
+          if (piece.Color() == PieceColor::Black)
+            score -= pieceScore;
+          else
+            score += pieceScore;
+      }
+    }
+
+    return score;
+  }
+}
+
+int Heuristics::PieceThreatened(WorldState* state, PieceData tPiece, PieceColor color) {
+    auto tPiecePoint = FindPiece(state, tPiece, color); 
+    
+    for (auto line = 0; line < 8; line++) {
+    for (auto column = 0; column < 8; column++) {
+      auto location = Point2D(column, line);
+      auto piece = state->PieceAtPosition(location);
+      auto pieceScore = 0;
+      int moves;
+      if (piece != tPiece)
+      {
+        switch (piece.Piece()) {
+          /*case PieceType::King:          // Use KingInCheck or KingInCheckmate instead
+            if (KingInCheck(state)) pieceScore += 500;
+            break;*/
+          case PieceType::Queen:
+            if (piece.Color() != color) {
+                if (Queen::AttackMoves(*state, location).contains(tPiecePoint)) 
+                    return true;
+            }
+            break;
+          case PieceType::Rook:
+            if (piece.Color() != color) {
+                if (Rook::AttackMoves(*state, location).contains(tPiecePoint)) 
+                    return true;
+            }
+            
+            break;
+          case PieceType::Knight:
+            if (piece.Color() != color) {
+                if (Knight::AttackMoves(*state, location).contains(tPiecePoint)) 
+                    return true;
+            }
+            
+            break;
+          case PieceType::Bishop:
+            if (piece.Color() != color) {
+                if (Bishop::AttackMoves(*state, location).contains(tPiecePoint))
+                    return true;
+            }
+            
+            break;
+          case PieceType::Pawn:
+            if (piece.Color() != color) {
+                if (Pawn::AttackMoves(*state, location).contains(tPiecePoint)) 
+                    return true;
+            }
+            
+            break;
+          default:
+            continue;
+        }
+      }
+      
+    }
+    }
+
+    return false;
+
+    return 0;
+}
+
 int Heuristics::distanceToCenter(Point2D location) {
   // todo: improve. I am unsure if this is the best way. I am doubling because I am targeting the center.
   auto doubled = Point2D(location.x * 2 - 7, location.y * 2 - 7);
   auto maxed = 3 - (std::min(std::abs(doubled.x), std::abs(doubled.y)) - 1) / 2;
   return maxed;
+}
+
+bool Heuristics::KingInCheck(WorldState* state) { 
+
+    auto blackKing = King::FindKing(*state, PieceColor::Black);
+    auto whiteKing = King::FindKing(*state, PieceColor::White);
+
+    for (auto line = 0; line < 8; line++) {
+    for (auto column = 0; column < 8; column++) {
+      auto location = Point2D(column, line);
+      auto piece = state->PieceAtPosition(location);
+      auto pieceScore = 0;
+      int moves;
+      switch (piece.Piece()) {
+        //case PieceType::King:
+        //  pieceScore += 1000;                                        // piece value
+        //  pieceScore += King::AttackMoves(*state, location).size();  // mobility
+        //  pieceScore += distanceToCenter(location);
+        //  // todo: king safety, check, draw and mate
+        //  break;
+        case PieceType::Queen:
+            if (piece.Color() == PieceColor::Black)
+            {
+                if (Queen::AttackMoves(*state, location).contains(whiteKing)) return true;
+            }
+            if (piece.Color() == PieceColor::White) {
+                if (Queen::AttackMoves(*state, location).contains(blackKing)) return true;
+            }
+          break;
+        case PieceType::Rook:
+          if (piece.Color() == PieceColor::Black) {
+                if (Rook::AttackMoves(*state, location).contains(whiteKing)) return true;
+          }
+          if (piece.Color() == PieceColor::White) {
+                if (Rook::AttackMoves(*state, location).contains(blackKing)) return true;
+          }
+          break;
+        case PieceType::Knight:
+          if (piece.Color() == PieceColor::Black) {
+                if (Knight::AttackMoves(*state, location).contains(whiteKing)) return true;
+          }
+          if (piece.Color() == PieceColor::White) {
+                if (Knight::AttackMoves(*state, location).contains(blackKing)) return true;
+          }
+          break;
+        case PieceType::Bishop:
+          if (piece.Color() == PieceColor::Black) {
+                if (Bishop::AttackMoves(*state, location).contains(whiteKing)) return true;
+          }
+          if (piece.Color() == PieceColor::White) {
+                if (Bishop::AttackMoves(*state, location).contains(blackKing)) return true;
+          }
+          break;
+        case PieceType::Pawn:
+          if (piece.Color() == PieceColor::Black) {
+                if (Pawn::AttackMoves(*state, location).contains(whiteKing)) return true;
+          }
+          if (piece.Color() == PieceColor::White) {
+                if (Pawn::AttackMoves(*state, location).contains(blackKing)) return true;
+          }
+          break;
+        default:
+          continue;
+      }
+      
+    }
+  }
+
+    return false; 
+}
+
+Point2D Heuristics::FindPiece(WorldState* state, PieceData piece, PieceColor color) { 
+    
+    for (auto line = 0; line < 8; line++) {
+    for (auto column = 0; column < 8; column++) {
+      Point2D location = {column, line};
+      auto p = state->PieceAtPosition(location);
+      if (p.Color() != color) continue;
+      if (p.Piece() == piece.Piece()) return location;
+    }
+    }
+    return {};
+    
+}
+
+bool Heuristics::KingInCheckmate(WorldState* state) {
+    
+    if (KingInCheck(state))
+    {
+        if (state->GetTurn() == PieceColor::Black)
+        {
+           auto kingMoves = King::AttackMoves(*state, King::FindKing(*state, PieceColor::Black));
+           if (kingMoves.size() <= 0)
+           {
+                return true;
+            }
+        }
+        if (state->GetTurn() == PieceColor::White) {
+            auto kingMoves = King::AttackMoves(*state, King::FindKing(*state, PieceColor::White));
+            if (kingMoves.size() <= 0) {
+                return true;
+            }
+        }
+    }
+    
+    return false; 
 }
