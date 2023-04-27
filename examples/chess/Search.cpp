@@ -64,7 +64,7 @@ Move Search::NextMove(WorldState& state) {
   for pruning maximize the score for your turn
   */
 
-    return MinMax(state, 1);
+    return MinMax(state, 3);
 
 
     return Move();
@@ -150,10 +150,12 @@ vector<MoveNode> Search::NextPossibleMovesScored(WorldState& state, MoveNode* pa
     if (state.GetTurn() == PieceColor::White)
     {
         sort(sorted.begin(), sorted.end());
+        
     }
     if (state.GetTurn() == PieceColor::Black)
     {
         sort(sorted.rbegin(), sorted.rend());
+        
     }
 
     return sorted;
@@ -172,8 +174,13 @@ vector<MoveNode> Search::NextPossibleMoves(WorldState& state, MoveNode* parent, 
           possibleState.Move(move.From(), move.To());
           MoveNode child = {possibleState, {}, parent, move, 0};
           // parent->AddChild(child);
-          children.push_back(child);
+          
           child.AddChildren(NextPossibleMoves(possibleState, &child, lvlsDeep - 1));
+          if (child.children.size() > 0)
+          {
+              child.ChangeScore(AnalyseMoveNode(child));
+          }
+          children.push_back(child);
         }
     } else if (lvlsDeep <= 1) {
         children = NextPossibleMovesScored(parent->state,parent);
@@ -189,55 +196,65 @@ vector<MoveNode> Search::NextPossibleMoves(WorldState& state, MoveNode* parent, 
 MoveNode Search::AnalyseMoveTree(MoveNode* nodetree) {
     
     MoveNode movenode = *nodetree;
-
-    for (auto child : nodetree->children) {
-        //auto currentChild = child;
-        while (child.score <= 0 && !child.children.empty()) {
-             AnalyseMoveTree(&child.GetCurrentChild()); 
-            
-        }
-        
-        movenode.ChangeScore(AnalyseMoveNode(movenode));
+    
+    if (movenode.children.size() <= 0)
+    {
+        cout << "We are leaves" << endl;
     }
+
+    //if (movenode.score == 0)
+    //{
+    //    for (auto child : nodetree->children) {
+    //      // auto currentChild = child;
+    //        /*if (child.score == 0 && !child.children.empty()) {
+    //            movenode = AnalyseMoveTree(&child.GetCurrentChild());
+    //        } 
+    //        else if (child.score != 0 && !child.children.empty())
+    //        {
+    //            movenode.ChangeScore(AnalyseMoveNode(movenode));
+    //        }*/
+
+    //    }
+    //}
+
+    
 
     if (movenode.state.GetTurn() == PieceColor::White)
     {
-        sort(movenode.children.rbegin(), movenode.children.rend());
-        return movenode.GetFirstChild();
+        sort(movenode.children.begin(), movenode.children.end());
+        return movenode.GetCurrentChild();
     }
     if (movenode.state.GetTurn() == PieceColor::Black)
     {
-        sort(movenode.children.begin(), movenode.children.end());
-        return movenode.GetFirstChild();
+        sort(movenode.children.rbegin(), movenode.children.rend());
+        return movenode.GetCurrentChild();
         
     }
 
-    
+      
 
-    
-
-    return movenode.GetCurrentChild();
+    return movenode;
 
     
 }
 
 int Search::AnalyseMoveNode(MoveNode node) { 
     
-    int score = 0;
+    int score = node.children[0].score;
 
 
     for (auto child : node.children)
     {
         if (child.state.GetTurn() == PieceColor::Black)
         {
-            if (child.score <= score)
+            if (child.score < score)
             {
                 score = child.score;
             }
         } 
         else if (child.state.GetTurn() == PieceColor::White)
         {
-            if (child.score >= score) {
+            if (child.score > score) {
                 score = child.score;
             }
         }
