@@ -64,158 +64,304 @@ Move Search::NextMove(WorldState& state) {
   for pruning maximize the score for your turn
   */
 
-    vector<MoveState> score = NextPossibleMovesSorted(state);
-    //vector<MoveState> scoreH1(score.begin(), score.begin() + score.size() / 2);
-    //vector<MoveState> scoreH2(score.begin() + score.size() / 2, score.end());
-    
-    vector<Move> scoreMoves;
-    vector<MoveState> score2;
-    for (auto moves : score)
-    {
-        
-        auto possibleState = state;
-        possibleState.Move(moves.moves.back().From(), moves.moves.back().To());
-        
-        score2.append_range(NextPossibleMovesSorted(possibleState, moves.moves));
-    }
-    /*vector<MoveState> score2H1(score2.begin(), score2.begin() + score2.size() / 2);
-    std::sort(score2H1.begin(), score2H1.end());*/
-    std::sort(score2.begin(), score2.end());
-
-
-    /*for (auto moves2 : score2H1)
-    {
-        
-    }*/
-
-
-
-    vector<MoveState> score3;
-    for (auto moves2 : score2) {
-        auto possibleState = state;
-        possibleState.Move(moves2.moves.back().From(), moves2.moves.back().To());
-        score3.append_range(NextPossibleMovesSorted(possibleState, moves2.moves));
-    }
-    std::sort(score3.begin(), score3.end());
-    //vector<MoveState> score3H1(score3.begin(), score3.begin() + score.size() / 2);
-
-    /*vector<MoveState> sorted; 
-    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
-    for (auto move : possibleMoves)
-    {
-        auto possibleState = state;
-        possibleState.Move(move.From(),move.To());
-        auto score = Heuristics::MaterialScore(&possibleState);
-        sorted.push_back({possibleState, move, score});
-    }
-    std::sort(sorted.begin(), sorted.end());*/
-
-    /*vector<Move> l2moves;
-    for (auto moves : sorted)
-    {
-
-    }*/
-
-
-
-
-
-    
-    if (score3.size() > 0)
-    {
-        if (state.GetTurn() == PieceColor::Black)
-            return score3.front().moves.front();
-        else
-            return score3.back().moves.front();
-    }
+    return MinMax(state, 1);
 
 
     return Move();
 
 }
 
-vector<MoveState> Search::NextPossibleMovesSorted(WorldState& state) { 
-   
-    vector<Move> bestPossibleMoves;
+//MoveNode Search::NextPossibleMoves(WorldState& state) { return MoveNode(); }
 
-    vector<MoveState> sorted;
+MoveNode Search::NextPossibleMove(WorldState& state, int lvlsDeep) { 
+    
+    MoveNode base = {state, {}, nullptr, {}, 0};
+
+     // Go Deep
+
+    
+    vector<MoveNode> sorted;
+    //vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+
+    
+    base.AddChildren(NextPossibleMoves(base.state, &base, lvlsDeep));
+    
+
+    //return base;
+
+
+    
+
+    // Accend the Tree to find best move
+    MoveNode bestMove = AnalyseMoveTree(&base);
+
+    return bestMove;
+    
+    //return MoveNode(); 
+}
+
+vector<MoveNode> Search::NextPossibleMovesVector(WorldState& state) { 
+    
+    MoveNode base = {state, {}, nullptr, {}, 0};
+    vector<MoveNode> sorted;
     vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+
+    for (auto move : possibleMoves) {
+        auto possibleState = state;
+        possibleState.Move(move.From(), move.To());
+        sorted.push_back({possibleState, {}, &base, move, 0});
+        base.AddChild({possibleState, {}, &base, move, 0});
+    }
+    
+    return sorted;
+    
+    return vector<MoveNode>(); }
+
+vector<MoveNode> Search::NextPossibleMoves(WorldState& state, MoveNode& parent) { 
+    
+     //MoveNode base = {state, {}, nullptr, 0};
+    vector<MoveNode> sorted;
+    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+
+    for (auto move : possibleMoves) {
+        auto possibleState = state;
+        possibleState.Move(move.From(), move.To());
+        sorted.push_back({possibleState, {}, &parent, move, 0});
+        
+    }
+
+    return sorted;
+    
+    
+    return vector<MoveNode>(); }
+
+vector<MoveNode> Search::NextPossibleMovesScored(WorldState& state, MoveNode* parent) { 
+    vector<MoveNode> sorted;
+    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+
     for (auto move : possibleMoves) {
         auto possibleState = state;
         possibleState.Move(move.From(), move.To());
         auto score = Heuristics::BoardAnalysis(&possibleState);
-        sorted.push_back({possibleState, {move}, (int)score.Score()});
+        
+        sorted.push_back({possibleState, {}, parent, move, (int)score.Score()});
     }
-    std::sort(sorted.begin(), sorted.end());
-    vector<MoveState> reverseSorted = sorted;
-    std::sort(reverseSorted.rbegin(), reverseSorted.rend());
-    
-    if (sorted.size() > 0) {
-        if (state.GetTurn() == PieceColor::Black) {
-            Move nextmove = sorted.front().GetFirstMove();
-            int movescore = sorted.front().score;
-            /*for (auto bestmove : sorted)
-            {
-                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
-            }
-            return bestPossibleMoves;*/
-            return sorted;
-        } else if (state.GetTurn() == PieceColor::White) {
-            Move nextmove = sorted.front().GetCurrentMove();
-            int movescore = sorted.back().score;
-            /*for (auto bestmove : reverseSorted) 
-            {
-                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
-            }
-            return bestPossibleMoves;*/
-            return reverseSorted;
-        }
+
+    if (state.GetTurn() == PieceColor::White)
+    {
+        sort(sorted.begin(), sorted.end());
     }
+    if (state.GetTurn() == PieceColor::Black)
+    {
+        sort(sorted.rbegin(), sorted.rend());
+    }
+
+    return sorted;
     
-    return vector<MoveState>(); 
 }
 
-vector<MoveState> Search::NextPossibleMovesSorted(WorldState& state, vector<Move> prevMoves) { 
-    vector<Move> bestPossibleMoves;
+vector<MoveNode> Search::NextPossibleMoves(WorldState& state, MoveNode* parent, int lvlsDeep) { 
+    
 
-    vector<MoveState> sorted;
+    vector<MoveNode> children;
     vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
-    for (auto move : possibleMoves) {
-        auto possibleState = state;
-        possibleState.Move(move.From(), move.To());
-        auto score = Heuristics::MaterialScore(&possibleState);
-        MoveState moveState(possibleState,prevMoves, score);
-        moveState.AddMoveToMoves(move);
-        sorted.push_back(moveState);
-    }
-    std::sort(sorted.begin(), sorted.end());
-    vector<MoveState> reverseSorted = sorted;
-    std::sort(reverseSorted.rbegin(), reverseSorted.rend());
 
-    if (sorted.size() > 0) {
-        if (state.GetTurn() == PieceColor::Black) {
-            Move nextmove = sorted.front().GetFirstMove();
-            int movescore = sorted.front().score;
-            /*for (auto bestmove : sorted)
+    if (lvlsDeep > 1) {
+        for (auto move : possibleMoves) {
+          auto possibleState = state;
+          possibleState.Move(move.From(), move.To());
+          MoveNode child = {possibleState, {}, parent, move, 0};
+          // parent->AddChild(child);
+          children.push_back(child);
+          child.AddChildren(NextPossibleMoves(possibleState, &child, lvlsDeep - 1));
+        }
+    } else if (lvlsDeep <= 1) {
+        children = NextPossibleMovesScored(parent->state,parent);
+    }
+
+    
+
+    return children;
+    
+    return vector<MoveNode>();
+}
+
+MoveNode Search::AnalyseMoveTree(MoveNode* nodetree) {
+    
+    MoveNode movenode = *nodetree;
+
+    for (auto child : nodetree->children) {
+        //auto currentChild = child;
+        while (child.score <= 0 && !child.children.empty()) {
+             AnalyseMoveTree(&child.GetCurrentChild()); 
+            
+        }
+        
+        movenode.ChangeScore(AnalyseMoveNode(movenode));
+    }
+
+    if (movenode.state.GetTurn() == PieceColor::White)
+    {
+        sort(movenode.children.rbegin(), movenode.children.rend());
+        return movenode.GetFirstChild();
+    }
+    if (movenode.state.GetTurn() == PieceColor::Black)
+    {
+        sort(movenode.children.begin(), movenode.children.end());
+        return movenode.GetFirstChild();
+        
+    }
+
+    
+
+    
+
+    return movenode.GetCurrentChild();
+
+    
+}
+
+int Search::AnalyseMoveNode(MoveNode node) { 
+    
+    int score = 0;
+
+
+    for (auto child : node.children)
+    {
+        if (child.state.GetTurn() == PieceColor::Black)
+        {
+            if (child.score <= score)
             {
-                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+                score = child.score;
             }
-            return bestPossibleMoves;*/
-            return sorted;
-        } else if (state.GetTurn() == PieceColor::White) {
-            Move nextmove = sorted.front().GetCurrentMove();
-            int movescore = sorted.back().score;
-            /*for (auto bestmove : reverseSorted)
-            {
-                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+        } 
+        else if (child.state.GetTurn() == PieceColor::White)
+        {
+            if (child.score >= score) {
+                score = child.score;
             }
-            return bestPossibleMoves;*/
-            return reverseSorted;
         }
     }
     
+    return score;
+    
+    return 0; }
 
-    return vector<MoveState>();
+
+
+//vector<MoveState> Search::NextPossibleMovesSorted(WorldState& state) { 
+//   
+//    vector<Move> bestPossibleMoves;
+//
+//    vector<MoveState> sorted;
+//    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+//    for (auto move : possibleMoves) {
+//        auto possibleState = state;
+//        possibleState.Move(move.From(), move.To());
+//        auto score = Heuristics::BoardAnalysis(&possibleState);
+//        sorted.push_back({possibleState, {move}, (int)score.Score()});
+//    }
+//    std::sort(sorted.begin(), sorted.end());
+//    vector<MoveState> reverseSorted = sorted;
+//    std::sort(reverseSorted.rbegin(), reverseSorted.rend());
+//    
+//    if (sorted.size() > 0) {
+//        if (state.GetTurn() == PieceColor::Black) {
+//            Move nextmove = sorted.front().GetFirstMove();
+//            int movescore = sorted.front().score;
+//            /*for (auto bestmove : sorted)
+//            {
+//                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+//            }
+//            return bestPossibleMoves;*/
+//            return sorted;
+//        } else if (state.GetTurn() == PieceColor::White) {
+//            Move nextmove = sorted.front().GetCurrentMove();
+//            int movescore = sorted.back().score;
+//            /*for (auto bestmove : reverseSorted) 
+//            {
+//                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+//            }
+//            return bestPossibleMoves;*/
+//            return reverseSorted;
+//        }
+//    }
+//    
+//    return vector<MoveState>(); 
+//}
+//
+//vector<MoveState> Search::NextPossibleMovesSorted(WorldState& state, vector<Move> prevMoves) { 
+//    vector<Move> bestPossibleMoves;
+//
+//    vector<MoveState> sorted;
+//    vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
+//    for (auto move : possibleMoves) {
+//        auto possibleState = state;
+//        possibleState.Move(move.From(), move.To());
+//        auto score = Heuristics::MaterialScore(&possibleState);
+//        MoveState moveState(possibleState,prevMoves, score);
+//        moveState.AddMoveToMoves(move);
+//        sorted.push_back(moveState);
+//    }
+//    std::sort(sorted.begin(), sorted.end());
+//    vector<MoveState> reverseSorted = sorted;
+//    std::sort(reverseSorted.rbegin(), reverseSorted.rend());
+//
+//    if (sorted.size() > 0) {
+//        if (state.GetTurn() == PieceColor::Black) {
+//            Move nextmove = sorted.front().GetFirstMove();
+//            int movescore = sorted.front().score;
+//            /*for (auto bestmove : sorted)
+//            {
+//                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+//            }
+//            return bestPossibleMoves;*/
+//            return sorted;
+//        } else if (state.GetTurn() == PieceColor::White) {
+//            Move nextmove = sorted.front().GetCurrentMove();
+//            int movescore = sorted.back().score;
+//            /*for (auto bestmove : reverseSorted)
+//            {
+//                bestPossibleMoves.push_back(bestmove.GetCurrentMove());
+//            }
+//            return bestPossibleMoves;*/
+//            return reverseSorted;
+//        }
+//    }
+//    
+//
+//    return vector<MoveState>();
+//}
+
+Move Search::MinMax(WorldState& state, int levelsDeep) { 
+
+    /*vector<vector<MoveNode>> levels;
+    vector<MoveNode> scoredLevel;
+
+    for (int i = 0; i < levelsDeep; i++)
+    {
+        levels.emplace_back(new vector<MoveNode>);
+    }
+
+    levels[0].append_range(NextPossibleMoves(state));
+
+    for (int i = 0; i + 1 < levelsDeep - 1; i++)
+    {
+        for (auto move : levels[i]) {
+            levels[i + 1].append_range(NextPossibleMoves(move.state));
+        }
+    }
+
+    for (auto move : levels[levelsDeep - 1]) {
+        scoredLevel.append_range(NextPossibleMovesScored(move.state, move));
+    }*/
+
+   
+    MoveNode bestMove = NextPossibleMove(state, levelsDeep);
+
+    return bestMove.move;
+
+    return Move(); 
 }
 
 

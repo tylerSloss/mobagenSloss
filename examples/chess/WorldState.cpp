@@ -54,6 +54,8 @@ void WorldState::Reset() {
   SetPieceAtPosition({PieceColor::Black, PieceType::Bishop}, {5, 7});
   SetPieceAtPosition({PieceColor::Black, PieceType::Knight}, {6, 7});
   SetPieceAtPosition({PieceColor::Black, PieceType::Rook}, {7, 7});
+
+  
 }
 void WorldState::SetPieceAtPosition(PieceData piece, Point2D pos) {
   auto packed = PieceData::Pack(piece);

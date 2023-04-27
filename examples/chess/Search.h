@@ -6,8 +6,18 @@
 struct Search {
   // todo: create your algorithm to calculate next move
   static Move NextMove(WorldState& state);
-  static vector<MoveState> NextPossibleMovesSorted(WorldState& state);
-  static vector<MoveState> NextPossibleMovesSorted(WorldState& state, vector<Move> prevMoves);
+  //static MoveNode NextPossibleMoves(WorldState& state);
+  static MoveNode NextPossibleMove(WorldState& state, int lvlsDeep);
+  static vector<MoveNode> NextPossibleMovesVector(WorldState& state);
+  static vector<MoveNode> NextPossibleMoves(WorldState& state, MoveNode& parent);
+  static vector<MoveNode> NextPossibleMovesScored(WorldState& state, MoveNode* parent);
+  static vector<MoveNode> NextPossibleMoves(WorldState& state, MoveNode* parent, int lvlsDeep);
+
+  static MoveNode AnalyseMoveTree(MoveNode* nodetree);
+  static int AnalyseMoveNode(MoveNode node);
+
+
+  static Move MinMax(WorldState& state, int levelsDeep);
   /**
    * @param state world state
    * @param currentPlayer calculate the current turn possible moves

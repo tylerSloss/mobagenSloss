@@ -109,6 +109,34 @@ public:
   virtual vector<WorldState> GenerateStates(WorldState* world, const Point2D& origin) = 0;
 };
 
+struct MoveNode {
+  WorldState state;
+  vector<MoveNode> children;
+  MoveNode* parent;
+  Move move;
+  int score;
+
+  
+
+  MoveNode(WorldState state, vector<MoveNode> children, MoveNode* parent, Move move, int score) {
+    this->state = state;
+    this->children = children;
+    this->parent = parent;
+    this->score = score;
+    this->move = move;
+  };
+
+  MoveNode& GetCurrentChild() { return children.back(); }
+  MoveNode& GetFirstChild() { return children.front(); }
+
+  void AddChild(MoveNode node) { children.push_back(node); }
+  void AddChildren(vector<MoveNode> nodes) { children.insert_range(children.end(), nodes); }
+  void ChangeScore(int score) { this->score = score; }
+
+  bool operator<(const MoveNode& other) const { return score < other.score; }
+  bool operator>(const MoveNode& other) const { return score > other.score; }
+};
+
 struct MoveState {
   WorldState state;
   vector<Move> moves;

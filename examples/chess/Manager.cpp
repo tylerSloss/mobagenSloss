@@ -216,6 +216,6 @@ void Manager::Update(float deltaTime) {
   if (aiEnabled && aiColor == state.GetTurn()) {
     auto move = Search::NextMove(state);
     state.Move(move.From(), move.To());
-    score = Heuristics::MaterialScore(&state);
+    score = Heuristics::BoardAnalysis(&state).Score();
   }
 }
