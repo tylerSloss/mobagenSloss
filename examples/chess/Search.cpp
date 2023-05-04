@@ -80,7 +80,7 @@ MoveNode Search::NextPossibleMove(WorldState& state, int lvlsDeep) {
      // Go Deep
 
     
-    vector<MoveNode> sorted;
+    
     //vector<Move> possibleMoves = ListMoves(state, state.GetTurn());
 
     
@@ -262,7 +262,25 @@ int Search::AnalyseMoveNode(MoveNode node) {
     
     return score;
     
-    return 0; }
+    return 0;
+}
+
+void Search::CleanupTree(MoveNode* node) {
+
+    for (auto child : node->children)
+    {
+        if (child.children.size() > 0) CleanupTree(&child);
+        if (child.parent != nullptr)
+        {
+            //free(child.parent);
+            //delete child.parent;
+            child.parent = nullptr;
+        }
+        
+    }
+   
+
+}
 
 
 
@@ -376,7 +394,11 @@ Move Search::MinMax(WorldState& state, int levelsDeep) {
    
     MoveNode bestMove = NextPossibleMove(state, levelsDeep);
 
-    return bestMove.move;
+    Move best = bestMove.move;
+
+    CleanupTree(&bestMove);
+
+    return best;
 
     return Move(); 
 }

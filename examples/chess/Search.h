@@ -16,6 +16,8 @@ struct Search {
   static MoveNode AnalyseMoveTree(MoveNode* nodetree);
   static int AnalyseMoveNode(MoveNode node);
 
+  static void CleanupTree(MoveNode* node);
+
 
   static Move MinMax(WorldState& state, int levelsDeep);
   /**

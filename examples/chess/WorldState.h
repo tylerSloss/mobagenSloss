@@ -126,6 +126,9 @@ struct MoveNode {
     this->move = move;
   };
 
+ 
+  
+
   MoveNode& GetCurrentChild() { return children.back(); }
   MoveNode& GetFirstChild() { return children.front(); }
 
